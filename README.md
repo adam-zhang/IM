@@ -6,3 +6,4 @@ try to write a im software.
 2. boost::log
 3. boost::asio
 4. boost::serializationn
+5. uuid

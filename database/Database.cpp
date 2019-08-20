@@ -1,4 +1,5 @@
 #include "Database.h"
+#include "User.h"
 #include <string>
 #include <memory>
 #include <experimental/filesystem>
@@ -15,7 +16,7 @@ string databaseName()
 }
 
 Database::Database()
-	: connection_(make_unique<sqlite::connection>(databaseName()))
+       	: connection_(make_unique<sqlite::connection>(databaseName()))
 {
 	initialize();
 }
@@ -36,7 +37,33 @@ bool Database::createTables()
 		&& createGroups()
 		&& createGroupMembers()
 		&& createDialogs()
-		&& createGroupDialogs();
+		&& createGroupDialogs()
+		&& createContacts()
+		&& createGroupContacts();
+}
+
+bool Database::createGroupContacts()
+{
+	string sql = "create table if not exists groupContacts("
+		"id uuid primary key,"
+		"sender uuid not null,"
+		"groupID uuid not null,"
+		"foreign key (sender) references users(id),"
+		"foreign key (groupID) references groups(id)"
+		")";
+	return createTable(sql);
+}
+
+bool Database::createContacts()
+{
+	string sql = "create table if not exists contacts("
+		"id uuid primary key,"
+		"sender uuid not null,"
+		"receiver uuid not null,"
+		"foreign key (sender) references users(id),"
+		"foreign key (receiver) references users(id)"
+		")";
+	return createTable(sql);
 }
 
 
@@ -95,7 +122,8 @@ bool Database::createUsers()
 {
 	string sql = "create table if not exists Users("
 		"id uuid primary key,"
-		"userName text not null"
+		"userName text not null,"
+		"mobile text not null"
 		")";
 	return createTable(sql);
 }
@@ -107,4 +135,14 @@ bool Database::createTable(const string& sql)
 	comm.step();
 	BOOST_LOG_TRIVIAL(debug) << "end";
 	return true;
+}
+
+bool Database::registerUser(const User& user)
+{
+	string sql = "insert into users(id, userName, mobile)values(:id, :userName, :mobile) ";
+	auto comm = connection_->make_command(sql);
+	comm->bind(":id", user.id());
+	comm->bind(":userName", user.userName());
+	comm->bind(":mobile", user.mobile());
+	return comm->exec();
 }

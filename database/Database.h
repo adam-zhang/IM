@@ -28,6 +28,8 @@ class Database
 		bool createGroupMembers();
 		bool createDialogs();
 		bool createGroupDialogs();
+		bool createContacts();
+		bool createGroupContacts();
 		bool createTable(const std::string& sql);
 	public:
 		bool registerUser(const User&);
